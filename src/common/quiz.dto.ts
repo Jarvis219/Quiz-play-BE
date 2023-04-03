@@ -34,7 +34,7 @@ export interface IQuizDetailUpdate {
 
 export class QuizDto {
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   id: number;
 
@@ -63,7 +63,7 @@ export class QuizDto {
   @IsBoolean()
   published: boolean;
 
-  @ApiProperty({ default: 1 })
+  @ApiProperty({ default: 0 })
   @IsOptional()
   @IsNumber()
   countPlayers: number;

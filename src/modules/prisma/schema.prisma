@@ -17,8 +17,17 @@ enum EQuestionType {
 
 model User {
   id    Int     @default(autoincrement()) @id
-  email String  @unique
-  name  String
+  email String  @unique @db.VarChar
+  full_name String? @db.VarChar
+  phone_number String? @db.VarChar
+  username  String @unique @db.VarChar
+  password  String? @db.VarChar
+  avatar String? @db.VarChar
+  address String? @db.VarChar
+  reset_password_token String? @db.VarChar
+  token_expiry_date DateTime? @db.Timestamp(6)
+  email_unverify String? @db.VarChar
+  verify_email_token String? @db.VarChar
   quizzes Quiz[]
 }
 
