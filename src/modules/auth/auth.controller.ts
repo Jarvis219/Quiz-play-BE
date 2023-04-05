@@ -57,7 +57,7 @@ export class AuthController {
 
     if (user) {
       throw new HttpException(
-        `Username ${body.username} existed`,
+        `Username ${user.username} existed`,
         HttpStatus.BAD_REQUEST,
       );
     }

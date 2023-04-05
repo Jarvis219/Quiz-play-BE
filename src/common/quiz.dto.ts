@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import {
-  IsArray,
   IsBoolean,
   IsNotEmpty,
   IsNumber,
@@ -13,23 +13,68 @@ enum EQuestionType {
   MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
 }
 
-export interface IQuizDetail {
-  id?: number;
+export class QuizDetailDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
   question: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
   type: EQuestionType;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
   points: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsBoolean()
   isAnswered: boolean;
-  image?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  photo: string;
 }
 
-export interface IQuizDetailUpdate {
-  id?: number;
-  question?: string;
-  type?: EQuestionType;
-  points?: number;
-  isAnswered?: boolean;
-  image?: string;
-  quizId?: number;
+export class QuizDetailUpdateDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  id: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  question: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  type: EQuestionType;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  points: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  isAnswered: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  photo: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  quizId: number;
 }
 
 export class QuizDto {
@@ -39,11 +84,12 @@ export class QuizDto {
   id: number;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   slug: string;
 
   @ApiProperty()
+  @Transform(({ value }) => parseInt(value))
   @IsNotEmpty()
   @IsNumber()
   authorId: number;
@@ -52,6 +98,11 @@ export class QuizDto {
   @IsNotEmpty()
   @IsString()
   title: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  photo: string;
 
   @ApiProperty()
   @IsOptional()
@@ -70,11 +121,64 @@ export class QuizDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsArray()
-  @IsNotEmpty()
-  quizDetails: IQuizDetail[];
+  @IsString()
+  code: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => QuizDetailDto)
+  quizDetails: QuizDetailDto;
 }
 
-export type QuizUpdateDto = Omit<QuizDto, 'quizDetails'> & {
-  quizDetails?: IQuizDetailUpdate[];
-};
+export class QuizUpdateDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  id: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  slug: string;
+
+  @ApiProperty()
+  @Transform(({ value }) => parseInt(value))
+  @IsOptional()
+  @IsNumber()
+  authorId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  title: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  photo: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  content: string;
+
+  @ApiProperty({ default: false })
+  @IsOptional()
+  @IsBoolean()
+  published: boolean;
+
+  @ApiProperty({ default: 0 })
+  @IsOptional()
+  @IsNumber()
+  countPlayers: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  code: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => QuizDetailUpdateDto)
+  quizDetails: QuizDetailUpdateDto[];
+}

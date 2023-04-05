@@ -10,3 +10,7 @@ export const generateSlug = (title: string): string => {
     randomUUID().slice(0, 7)
   );
 };
+
+export const generateCode = (count = 7) => {
+  return randomUUID().slice(0, count).toLocaleUpperCase();
+};

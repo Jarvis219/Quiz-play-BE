@@ -10,6 +10,9 @@ export class AuthMiddleware implements NestMiddleware {
   constructor(private readonly userService: UserService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    // Optional check authorization header
+    if (!req.headers['authorization']) return next();
+
     // Optional add user to req
     try {
       const jwtToken = get(req.headers['authorization']?.split(' '), 1, '');

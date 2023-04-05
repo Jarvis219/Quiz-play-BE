@@ -1,5 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+
+enum ERole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+}
 
 export class UserDto {
   @ApiProperty({ required: false })
@@ -53,4 +65,28 @@ export class ChangePasswordProfile {
   @IsString()
   @MinLength(8)
   newPassword: string;
+}
+
+export class UpdateProfileDto {
+  @ApiProperty({ required: false, default: '' })
+  @IsOptional()
+  @MaxLength(50)
+  @IsString()
+  full_name: string;
+
+  @ApiProperty({ required: false, default: '' })
+  @Matches(/^(0)[0-9]{9,10}$/)
+  @IsOptional()
+  @IsString()
+  phone_number: string;
+
+  @ApiProperty({ required: false, default: '' })
+  @IsOptional()
+  @IsString()
+  address: string;
+
+  @ApiProperty({ required: false, default: null })
+  @IsOptional()
+  @IsString()
+  avatar: string;
 }

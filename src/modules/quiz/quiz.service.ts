@@ -3,7 +3,11 @@ import {
   QuizDetail as QuizDetailModel,
   Quiz as QuizModel,
 } from '@prisma/client';
-import { IQuizDetailUpdate, QuizDto, QuizUpdateDto } from 'src/common/quiz.dto';
+import {
+  QuizDetailUpdateDto,
+  QuizDto,
+  QuizUpdateDto,
+} from 'src/common/quiz.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -25,6 +29,17 @@ export class QuizService {
     });
   }
 
+  async quizByCode(code: string): Promise<QuizModel> {
+    return this.prisma.quiz.findFirst({
+      where: {
+        code,
+      },
+      include: {
+        quizDetails: true,
+      },
+    });
+  }
+
   async createQuiz({
     title,
     slug,
@@ -32,6 +47,9 @@ export class QuizService {
     content,
     published,
     quizDetails,
+    code,
+    countPlayers,
+    photo,
   }: QuizDto): Promise<QuizModel> {
     return this.prisma.quiz.create({
       data: {
@@ -40,6 +58,9 @@ export class QuizService {
         authorId,
         content,
         published,
+        code,
+        countPlayers,
+        photo,
         quizDetails: {
           create: quizDetails,
         },
@@ -62,14 +83,14 @@ export class QuizService {
           type: quizDetail.type,
           points: quizDetail.points,
           isAnswered: quizDetail.isAnswered,
-          image: quizDetail.image,
+          photo: quizDetail.photo,
         },
         update: {
           question: quizDetail.question,
           type: quizDetail.type,
           points: quizDetail.points,
           isAnswered: quizDetail.isAnswered,
-          image: quizDetail.image,
+          photo: quizDetail.photo,
         },
       };
     });
@@ -132,7 +153,7 @@ export class QuizService {
     quizDetails,
   }: {
     quizId: number;
-    quizDetails: IQuizDetailUpdate[];
+    quizDetails: QuizDetailUpdateDto[];
   }) {
     return this.prisma.quizDetail.createMany({
       data: quizDetails?.map((quizDetail) => ({
@@ -140,7 +161,7 @@ export class QuizService {
         type: quizDetail.type,
         points: quizDetail.points,
         isAnswered: quizDetail.isAnswered,
-        image: quizDetail.image,
+        image: quizDetail.photo,
         quiz: {
           connect: { id: quizId },
         },

@@ -15,6 +15,11 @@ enum EQuestionType {
   MULTIPLE_CHOICE
 }
 
+enum ERole {
+  ADMIN
+  USER
+}
+
 model User {
   id    Int     @default(autoincrement()) @id
   email String  @unique @db.VarChar
@@ -28,15 +33,20 @@ model User {
   token_expiry_date DateTime? @db.Timestamp(6)
   email_unverify String? @db.VarChar
   verify_email_token String? @db.VarChar
+  is_verified Boolean? @default(false)
+  is_active Boolean? @default(true)
+  role ERole? @default(USER)
   quizzes Quiz[]
 }
 
 model Quiz {
   id        Int      @default(autoincrement()) @id
   slug      String   @unique
+  code      String? @unique
   authorId  Int
   title     String
   content   String?
+  photo     String? @db.VarChar
   published Boolean? @default(false)
   author    User?    @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   countPlayers Int? @default(0)
@@ -52,6 +62,6 @@ model QuizDetail {
   points    Int     @default(1)
   type      EQuestionType
   isAnswered Boolean? @default(false)
-  image     String? @default("")
+  photo     String? @default("")
   quiz      Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
