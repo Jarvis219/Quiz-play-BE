@@ -51,6 +51,15 @@ export class QuizService {
     countPlayers,
     photo,
   }: QuizDto): Promise<QuizModel> {
+    const quizDetailCreate = quizDetails.map((quizDetail) => ({
+      question: quizDetail.question,
+      type: quizDetail.type,
+      points: quizDetail.points,
+      isAnswered: quizDetail.isAnswered,
+      photo: quizDetail.photo || null,
+      keyImage: quizDetail.keyImage || null,
+    }));
+
     return this.prisma.quiz.create({
       data: {
         title,
@@ -62,7 +71,7 @@ export class QuizService {
         countPlayers,
         photo,
         quizDetails: {
-          create: quizDetails,
+          create: quizDetailCreate,
         },
       },
       include: {
@@ -77,20 +86,21 @@ export class QuizService {
         where: {
           id: quizDetail.id || -1,
         },
-        create: {
-          quizId: data.id,
-          question: quizDetail.question,
-          type: quizDetail.type,
-          points: quizDetail.points,
-          isAnswered: quizDetail.isAnswered,
-          photo: quizDetail.photo,
-        },
         update: {
           question: quizDetail.question,
           type: quizDetail.type,
           points: quizDetail.points,
           isAnswered: quizDetail.isAnswered,
           photo: quizDetail.photo,
+          keyImage: quizDetail.keyImage,
+        },
+        create: {
+          question: quizDetail.question,
+          type: quizDetail.type,
+          points: quizDetail.points,
+          isAnswered: quizDetail.isAnswered,
+          photo: quizDetail.photo,
+          keyImage: quizDetail.keyImage,
         },
       };
     });
@@ -100,16 +110,13 @@ export class QuizService {
         slug,
       },
       data: {
-        ...data,
+        title: data.title,
+        content: data.content,
+        countPlayers: data.countPlayers,
+        published: data.published,
+        photo: data.photo,
         quizDetails: {
-          upsert: quizDetailUpdate.map((quizDetail) => ({
-            create: {
-              ...quizDetail.create,
-              quiz: undefined,
-            },
-            update: quizDetail.update,
-            where: quizDetail.where,
-          })),
+          upsert: quizDetailUpdate,
         },
       },
       include: {

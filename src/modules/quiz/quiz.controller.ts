@@ -7,17 +7,21 @@ import {
   Param,
   Patch,
   Post,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { Quiz as QuizModel } from '@prisma/client';
 import { plainToClass } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
-import { DEFAULT_IMAGE_UPLOAD_LIMIT_SIZE, multerImageFilter } from 'src/common';
+import {
+  DEFAULT_IMAGE_UPLOAD_LIMIT_SIZE,
+  MAX_COUNT_QUIZ_DETAIL_PHOTO,
+  multerImageFilter,
+} from 'src/common';
 import { QuizDto, QuizUpdateDto } from 'src/common/quiz.dto';
 import { FirebaseStorageService } from 'src/services';
 import { generateCode, generateSlug } from 'src/utils';
@@ -52,15 +56,24 @@ export class QuizController {
   @UseGuards(AuthGuard('jwt'))
   @Post('/create')
   @UseInterceptors(
-    FileInterceptor('photo', {
-      limits: {
-        fileSize: DEFAULT_IMAGE_UPLOAD_LIMIT_SIZE,
+    FileFieldsInterceptor(
+      [
+        { name: 'photo', maxCount: 1 },
+        {
+          name: 'quizDetailPhoto',
+          maxCount: MAX_COUNT_QUIZ_DETAIL_PHOTO,
+        },
+      ],
+      {
+        limits: {
+          fileSize: DEFAULT_IMAGE_UPLOAD_LIMIT_SIZE,
+        },
+        fileFilter: multerImageFilter,
       },
-      fileFilter: multerImageFilter,
-    }),
+    ),
   )
   async createQuiz(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() file: Express.Multer.File[],
     @Body() data: QuizDto,
   ): Promise<QuizModel> {
     const quizDto = plainToClass(QuizDto, data);
@@ -83,18 +96,28 @@ export class QuizController {
       throw new NotFoundException(`Code "${quizDto.code}" already exists`);
     }
 
-    // for (const quizDetail of quizDto.quizDetails) {
-    //   await this.firebaseStorageService.uploadFile({
-    //     file: quizDetail.image as unknown as Express.Multer.File,
-    //     path: `quizs/${user.username}/${quizDto.slug}/images`,
-    //     fileName: 'quiz-image',
-    //   });
-    // }
+    const photo = file?.['photo']?.[0];
+    const quizDetailPhoto = file?.['quizDetailPhoto'];
 
-    if (file) {
+    if (quizDetailPhoto) {
+      for (const quizDetail of quizDto.quizDetails) {
+        for (const quizDetailPhotoItem of quizDetailPhoto) {
+          if (quizDetail.keyImage !== quizDetailPhotoItem.originalname)
+            continue;
+          const photoItem = await this.firebaseStorageService.uploadFile({
+            file: quizDetailPhotoItem,
+            path: `quizs/${user.username}/${quizDto.slug}/images`,
+            fileName: 'quiz-image',
+          });
+          quizDetail.photo = photoItem;
+        }
+      }
+    }
+
+    if (photo) {
       try {
         const avatarUrl = await this.firebaseStorageService.uploadFile({
-          file: file,
+          file: photo,
           path: `quiz/${user.username}/${quizDto.slug}/photo`,
           fileName: `${quizDto.slug}-photo`,
         });
@@ -121,25 +144,35 @@ export class QuizController {
   @UseGuards(AuthGuard('jwt'))
   @Patch('/update/:slug')
   @UseInterceptors(
-    FileInterceptor('photo', {
-      limits: {
-        fileSize: DEFAULT_IMAGE_UPLOAD_LIMIT_SIZE,
+    FileFieldsInterceptor(
+      [
+        { name: 'photo', maxCount: 1 },
+        {
+          name: 'quizDetailPhoto',
+          maxCount: MAX_COUNT_QUIZ_DETAIL_PHOTO,
+        },
+      ],
+      {
+        limits: {
+          fileSize: DEFAULT_IMAGE_UPLOAD_LIMIT_SIZE,
+        },
+        fileFilter: multerImageFilter,
       },
-      fileFilter: multerImageFilter,
-    }),
+    ),
   )
   async updateQuiz(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() file: Express.Multer.File[],
     @Body() data: QuizUpdateDto,
     @Param('slug') slug: string,
   ) {
-    const [quiz, user] = await Promise.all([
-      this.quizService.quizBySlug(slug),
-      this.userService.getById(data.authorId),
-    ]);
-
     const quizUpdateDto = plainToClass(QuizUpdateDto, data);
     await validateOrReject(quizUpdateDto);
+    if (!slug) throw new NotFoundException('Slug is required');
+
+    const [quiz, user] = await Promise.all([
+      this.quizService.quizBySlug(slug),
+      this.userService.getById(quizUpdateDto.authorId),
+    ]);
 
     if (!quiz) {
       throw new NotFoundException(`Quiz with slug "${slug}" not found`);
@@ -155,12 +188,30 @@ export class QuizController {
       quizUpdateDto.quizDetails = [];
     }
 
-    if (file) {
+    const photo = file?.['photo']?.[0];
+    const quizDetailPhoto = file?.['quizDetailPhoto'];
+
+    if (quizDetailPhoto) {
+      for (const quizDetail of quizUpdateDto.quizDetails) {
+        for (const quizDetailPhotoItem of quizDetailPhoto) {
+          if (quizDetail.keyImage !== quizDetailPhotoItem.originalname)
+            continue;
+          const photoItem = await this.firebaseStorageService.uploadFile({
+            file: quizDetailPhotoItem,
+            path: `quizs/${user.username}/${quizUpdateDto.slug}/images`,
+            fileName: 'quiz-image',
+          });
+          quizDetail.photo = photoItem;
+        }
+      }
+    }
+
+    if (photo) {
       try {
         const avatarUrl = await this.firebaseStorageService.uploadFile({
-          file: file,
+          file: photo,
           path: `quiz/${user.username}/${quizUpdateDto.slug}/photo`,
-          fileName: 'quiz-photo',
+          fileName: `${quizUpdateDto.slug}-photo`,
         });
         quizUpdateDto.photo = avatarUrl;
       } catch (error) {
@@ -169,16 +220,16 @@ export class QuizController {
     }
 
     return this.quizService.updateQuiz(slug, {
-      id: quizUpdateDto.id,
-      slug: quizUpdateDto.slug,
-      authorId: quizUpdateDto.authorId,
-      title: quizUpdateDto.title,
-      content: quizUpdateDto.content,
-      published: quizUpdateDto.published,
-      countPlayers: quizUpdateDto.countPlayers,
+      id: quizUpdateDto.id || quiz.id,
+      slug,
+      authorId: quizUpdateDto.authorId || quiz.authorId,
+      title: quizUpdateDto.title || quiz.title,
+      content: quizUpdateDto.content || quiz.content,
+      published: quizUpdateDto.published || quiz.published,
+      countPlayers: quizUpdateDto.countPlayers || quiz.countPlayers,
       quizDetails: quizUpdateDto.quizDetails,
-      code: quizUpdateDto.code,
-      photo: quizUpdateDto.photo,
+      code: quizUpdateDto.code || quiz.code,
+      photo: quizUpdateDto.photo || quiz.photo,
     });
   }
 

@@ -1,11 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 
 enum EQuestionType {
@@ -17,6 +19,11 @@ export class QuizDetailDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
+  keyImage: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
   question: string;
 
   @ApiProperty()
@@ -25,56 +32,70 @@ export class QuizDetailDto {
   type: EQuestionType;
 
   @ApiProperty()
+  @Transform(({ value }) => parseInt(value))
   @IsNotEmpty()
   @IsNumber()
   points: number;
 
   @ApiProperty()
+  @Transform(({ value }) => Boolean(value))
   @IsNotEmpty()
   @IsBoolean()
   isAnswered: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   photo: string;
 }
 
 export class QuizDetailUpdateDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @Transform(({ value }) => parseInt(value))
   @IsOptional()
   @IsNumber()
   id: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  question: string;
+  keyImage: string;
 
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  type: EQuestionType;
-
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @Transform(({ value }) => parseInt(value))
   @IsOptional()
   @IsNumber()
   points: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @Transform(({ value }) => Boolean(value))
   @IsOptional()
   @IsBoolean()
   isAnswered: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   photo: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @Transform(({ value }) => parseInt(value))
   @IsOptional()
   @IsNumber()
   quizId: number;
+
+  @ApiProperty({ required: true })
+  @IsNotEmpty()
+  @IsString()
+  question: string;
+
+  @ApiProperty({
+    required: true,
+    enum: EQuestionType,
+  })
+  @IsNotEmpty()
+  @IsString()
+  type: EQuestionType;
 }
 
 export class QuizDto {
@@ -94,7 +115,7 @@ export class QuizDto {
   @IsNumber()
   authorId: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: true })
   @IsNotEmpty()
   @IsString()
   title: string;
@@ -104,7 +125,7 @@ export class QuizDto {
   @IsString()
   photo: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   content: string;
@@ -124,14 +145,17 @@ export class QuizDto {
   @IsString()
   code: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => QuizDetailDto)
-  quizDetails: QuizDetailDto;
+  quizDetails: QuizDetailDto[];
 }
 
 export class QuizUpdateDto {
   @ApiProperty()
+  @Transform(({ value }) => parseInt(value))
   @IsOptional()
   @IsNumber()
   id: number;
@@ -143,7 +167,7 @@ export class QuizUpdateDto {
 
   @ApiProperty()
   @Transform(({ value }) => parseInt(value))
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   authorId: number;
 
@@ -172,13 +196,15 @@ export class QuizUpdateDto {
   @IsNumber()
   countPlayers: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   code: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => QuizDetailUpdateDto)
   quizDetails: QuizDetailUpdateDto[];
 }
