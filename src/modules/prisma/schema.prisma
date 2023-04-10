@@ -37,6 +37,8 @@ model User {
   is_active Boolean? @default(true)
   role ERole? @default(USER)
   quizzes Quiz[]
+  quizLikes QuizLike[]
+  quizResults QuizResult[]
 }
 
 model Quiz {
@@ -48,9 +50,13 @@ model Quiz {
   content   String?
   photo     String? @db.VarChar
   published Boolean? @default(false)
+  views     Int? @default(0)
+  share     Int? @default(0)
   author    User?    @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   countPlayers Int? @default(0)
   quizDetails QuizDetail[]
+  quizLikes QuizLike[]
+  quizResults QuizResult[]
 
 }
 
@@ -60,9 +66,34 @@ model QuizDetail {
   quizId    Int?
   question String
   points    Int     @default(1)
-  type      EQuestionType
-  isAnswered Boolean? @default(false)
+  type      EQuestionType? @default(SINGLE_CHOICE)
+  answers   Answer[]
   photo     String? @default("")
   keyImage  String? @default("")
   quiz      Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Answer {
+  id        Int      @default(autoincrement()) @id
+  quizDetailId Int?
+  answer    String
+  isCorrect Boolean? @default(false)
+  quizDetail QuizDetail? @relation(fields: [quizDetailId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model QuizLike {
+  id        Int      @default(autoincrement()) @id
+  quizId    Int?
+  userId    Int?
+  quiz      Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model QuizResult {
+  id        Int      @default(autoincrement()) @id
+  quizId    Int?
+  userId    Int?
+  score     Int?
+  quiz      Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }

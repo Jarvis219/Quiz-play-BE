@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -75,16 +76,17 @@ export class QuizController {
   async createQuiz(
     @UploadedFiles() file: Express.Multer.File[],
     @Body() data: QuizDto,
+    @Req() req: any,
   ): Promise<QuizModel> {
     const quizDto = plainToClass(QuizDto, data);
     await validateOrReject(quizDto);
 
-    const user = await this.userService.getById(quizDto.authorId);
+    const userId = req.user.id;
+
+    const user = await this.userService.getById(userId);
 
     if (!user) {
-      throw new NotFoundException(
-        `User with id "${quizDto.authorId}" not found`,
-      );
+      throw new NotFoundException(`User with id "${userId}" not found`);
     }
 
     quizDto.slug = generateSlug(quizDto.title);
@@ -130,7 +132,7 @@ export class QuizController {
     return this.quizService.createQuiz({
       id: quizDto.id || undefined,
       slug: quizDto.slug,
-      authorId: quizDto.authorId,
+      authorId: userId,
       title: quizDto.title,
       content: quizDto.content,
       published: quizDto.published,
@@ -164,14 +166,18 @@ export class QuizController {
     @UploadedFiles() file: Express.Multer.File[],
     @Body() data: QuizUpdateDto,
     @Param('slug') slug: string,
+    @Req() req: any,
   ) {
+    const userId = req.user.id;
+
     const quizUpdateDto = plainToClass(QuizUpdateDto, data);
     await validateOrReject(quizUpdateDto);
+
     if (!slug) throw new NotFoundException('Slug is required');
 
     const [quiz, user] = await Promise.all([
       this.quizService.quizBySlug(slug),
-      this.userService.getById(quizUpdateDto.authorId),
+      this.userService.getById(userId),
     ]);
 
     if (!quiz) {
@@ -179,8 +185,12 @@ export class QuizController {
     }
 
     if (!user) {
+      throw new NotFoundException(`User with id "${userId}" not found`);
+    }
+
+    if (userId !== quiz.authorId) {
       throw new NotFoundException(
-        `User with id "${quizUpdateDto.authorId}" not found`,
+        `You can't update this quiz because you are not the author`,
       );
     }
 
@@ -222,7 +232,7 @@ export class QuizController {
     return this.quizService.updateQuiz(slug, {
       id: quizUpdateDto.id || quiz.id,
       slug,
-      authorId: quizUpdateDto.authorId || quiz.authorId,
+      authorId: userId,
       title: quizUpdateDto.title || quiz.title,
       content: quizUpdateDto.content || quiz.content,
       published: quizUpdateDto.published || quiz.published,
@@ -251,12 +261,58 @@ export class QuizController {
   @UseGuards(AuthGuard('jwt'))
   @Delete('/delete/quiz-detail/:id')
   async deleteQuizDetail(@Param('id') id: number) {
-    const quizDetail = await this.quizService.getQuizDetailById(id);
+    id = Number(id);
+    const quizDetail = await this.quizService.getQuizDetailById({ id });
 
     if (!quizDetail) {
       throw new NotFoundException(`QuizDetail with id "${id}" not found`);
     }
 
-    return this.quizService.deleteQuizDetail(quizDetail);
+    try {
+      await this.quizService.deleteQuizDetail({ id });
+      return true;
+    } catch (error) {
+      throw new NotFoundException('Delete quiz detail failed');
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('/delete/quiz-detail/answer/:slug/:id')
+  async deleteQuizDetailAnswer(
+    @Param('slug') slug: string,
+    @Param('id') id: number,
+    @Req() req: any,
+  ) {
+    id = Number(id);
+
+    const userId = req.user.id;
+
+    const [user, quizDetailAnswer] = await Promise.all([
+      this.userService.getById(userId),
+      this.quizService.getQuizDetailAnswerBySlug({
+        slug,
+      }),
+    ]);
+
+    if (userId !== quizDetailAnswer.authorId) {
+      throw new NotFoundException(
+        `You can't delete this quiz detail answer because you are not the author`,
+      );
+    }
+
+    if (!user) {
+      throw new NotFoundException(`User with id "${userId}" not found`);
+    }
+
+    if (!quizDetailAnswer) {
+      throw new NotFoundException(`QuizDetailAnswer with id "${id}" not found`);
+    }
+
+    try {
+      await this.quizService.deleteQuizDetailAnswer({ id });
+      return true;
+    } catch (error) {
+      throw new NotFoundException('Delete quiz detail answer failed');
+    }
   }
 }
