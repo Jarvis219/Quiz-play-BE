@@ -21,7 +21,7 @@ export class AuthMiddleware implements NestMiddleware {
 
       req['user'] = user;
     } catch (err) {
-      console.log('JWT Error: ', err);
+      console.log('JWT Error');
     }
 
     next();

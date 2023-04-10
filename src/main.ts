@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppConfig } from 'AppConfig';
 import { AppModule } from './app.module';
 import { ENV, PORT } from './common';
 import { PrismaService } from './modules/prisma/prisma.service';
@@ -39,6 +40,10 @@ async function bootstrap() {
   );
 
   app.setGlobalPrefix('api');
+
+  app.enableCors({
+    origin: AppConfig.whitelistDomains,
+  });
 
   await app.listen(PORT, '0.0.0.0', () => {
     console.log(`AppConfig.Environment: run on ${PORT}`);

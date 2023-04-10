@@ -52,7 +52,7 @@ export class AuthController {
     }
   }
 
-  @Post('register')
+  @Post('register/username')
   async register(@Body() body: RegisterViaUsernameDto) {
     const [user, email] = await Promise.all([
       this.userService.getByUsername(body.username),
@@ -102,7 +102,7 @@ export class AuthController {
     };
   }
 
-  @Post('login-via-username')
+  @Post('login/username')
   async login(@Body() body: LoginUsernameBodyDto) {
     const user = await this.userService.findUserByCondition({
       OR: [{ username: body.username.trim() }, { email: body.username.trim() }],
