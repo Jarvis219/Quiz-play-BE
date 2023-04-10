@@ -6,7 +6,9 @@ import {
   HttpStatus,
   Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { hash, verify } from 'argon2';
 import { randomBytes } from 'crypto';
@@ -27,10 +29,12 @@ export class AuthController {
     private readonly authService: AuthService,
   ) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('/init/me')
   async initMe(@Req() req) {
     const authorization = req.headers['authorization'];
     const jwtToken = authorization.split(' ')[1];
+
     try {
       if (!jwtToken) return null;
       const { userId } = verifyJwt(jwtToken, SECRET_KEY, {
