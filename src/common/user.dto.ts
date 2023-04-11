@@ -8,11 +8,6 @@ import {
   MinLength,
 } from 'class-validator';
 
-enum ERole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-}
-
 export class UserDto {
   @ApiProperty({ required: false })
   @IsNotEmpty()

@@ -14,6 +14,7 @@ export const {
   FIREBASE_MESSAGING_SENDER_ID,
   FIREBASE_APP_ID,
   FIREBASE_MEASUREMENT_ID,
+  API_GOOGLE_GET_INFOR,
 } = process.env;
 
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production';

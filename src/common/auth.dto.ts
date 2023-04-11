@@ -76,3 +76,30 @@ export class RegisterViaUsernameDto {
   @IsString()
   address: string;
 }
+
+export class RegisterViaGoogleDto {
+  @ApiProperty({ required: true })
+  @IsNotEmpty()
+  @IsString()
+  email: string;
+
+  @ApiProperty({ required: true })
+  @IsNotEmpty()
+  @IsEmail()
+  name: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  picture: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  given_name: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  family_name: string;
+}

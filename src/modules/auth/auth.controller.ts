@@ -18,6 +18,7 @@ import {
   LoginUsernameBodyDto,
   RegisterViaUsernameDto,
 } from 'src/common/auth.dto';
+import { IGoogleUser } from 'src/types';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 
@@ -43,6 +44,7 @@ export class AuthController {
 
       const user = await this.userService.getById(userId);
 
+      user.id = undefined;
       user.password = undefined;
       user.verify_email_token = undefined;
 
@@ -90,6 +92,7 @@ export class AuthController {
 
     const accessToken = this.authService.login({ id: newUser.id });
 
+    newUser.id = undefined;
     newUser.password = undefined;
     newUser.verify_email_token = undefined;
 
@@ -113,12 +116,72 @@ export class AuthController {
     }
 
     const accessToken = this.authService.login({ id: user.id });
+    user.id = undefined;
     user.password = undefined;
     user.verify_email_token = undefined;
 
     return {
       accessToken,
       user,
+    };
+  }
+
+  @Post('login/google')
+  async loginGoogle(@Body() body: { token: string }) {
+    if (!body.token) {
+      throw new HttpException('Token is required', HttpStatus.BAD_REQUEST);
+    }
+
+    let data: IGoogleUser;
+
+    try {
+      data = (await this.authService.verifyTokenGoogle(body.token)).data;
+    } catch (error) {
+      throw new HttpException('Token is invalid', HttpStatus.UNAUTHORIZED);
+    }
+
+    const currentUser = await this.userService.getByEmail(data.email);
+
+    if (currentUser) {
+      const accessToken = this.authService.login({ id: currentUser.id });
+
+      currentUser.id = undefined;
+      currentUser.password = undefined;
+      currentUser.verify_email_token = undefined;
+
+      return {
+        accessToken,
+        user: currentUser,
+      };
+    }
+
+    const username = data.email.split('@')[0].replace('.', '');
+
+    const newPassword = await hash(data.email);
+    const token = randomBytes(100).toString('hex');
+
+    const dataCreateUser = {
+      username: username,
+      email: data.email,
+      full_name: data.name,
+      avatar: data.picture,
+      password: newPassword,
+      phone_number: null,
+      address: null,
+      verify_email_token: token,
+    };
+
+    const newUser = await this.userService.create(dataCreateUser);
+
+    const accessToken = this.authService.login({ id: newUser.id });
+
+    newUser.id = undefined;
+    newUser.password = undefined;
+    newUser.verify_email_token = undefined;
+
+    return {
+      accessToken,
+      user: newUser,
     };
   }
 }
