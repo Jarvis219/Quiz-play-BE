@@ -44,6 +44,7 @@ export class AuthController {
       const user = await this.userService.getById(userId);
 
       user.password = undefined;
+      user.verify_email_token = undefined;
 
       return user;
     } catch (error) {
@@ -76,7 +77,7 @@ export class AuthController {
     const newPassword = await hash(body.password);
     const token = randomBytes(100).toString('hex');
 
-    const { id } = await this.userService.create({
+    const newUser = await this.userService.create({
       username: body.username,
       email: body.email,
       password: newPassword,
@@ -87,18 +88,14 @@ export class AuthController {
       address: body.address,
     });
 
-    const accessToken = this.authService.login({ id });
+    const accessToken = this.authService.login({ id: newUser.id });
+
+    newUser.password = undefined;
+    newUser.verify_email_token = undefined;
 
     return {
       accessToken,
-      user: {
-        username: body.username,
-        email: body.email,
-        full_name: body.full_name,
-        avatar: body.avatar,
-        phone_number: body.phone_number,
-        address: body.address,
-      },
+      user: newUser,
     };
   }
 
@@ -116,17 +113,12 @@ export class AuthController {
     }
 
     const accessToken = this.authService.login({ id: user.id });
+    user.password = undefined;
+    user.verify_email_token = undefined;
 
     return {
       accessToken,
-      user: {
-        username: user.username,
-        email: user.email,
-        full_name: user.full_name,
-        avatar: user.avatar,
-        phone_number: user.phone_number,
-        address: user.address,
-      },
+      user,
     };
   }
 }
