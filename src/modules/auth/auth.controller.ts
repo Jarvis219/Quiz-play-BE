@@ -207,8 +207,8 @@ export class AuthController {
     }
   }
 
-  @Post('confirm-email')
-  async confirmEmail(@Body() body: { token: string }) {
+  @Post('verify-email')
+  async verifyEmail(@Body() body: { token: string }) {
     const user = await this.userService.getByVerifyEmailToken(body.token);
 
     if (!user) {
