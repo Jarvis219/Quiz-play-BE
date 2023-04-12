@@ -15,6 +15,8 @@ import { randomBytes } from 'crypto';
 import { verify as verifyJwt } from 'jsonwebtoken';
 import { SECRET_KEY } from 'src/common';
 import {
+  ChangePasswordDto,
+  ForgotPasswordDto,
   LoginUsernameBodyDto,
   RegisterViaUsernameDto,
 } from 'src/common/auth.dto';
@@ -219,6 +221,57 @@ export class AuthController {
 
     return {
       message: 'Verify email success',
+    };
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    const user = await this.userService.getByEmail(body.email);
+
+    if (!user) {
+      throw new HttpException('Email is invalid', HttpStatus.BAD_REQUEST);
+    }
+
+    const token = randomBytes(100).toString('hex');
+
+    await this.userService.updateForgotPasswordToken({
+      email: user.email,
+      token,
+    });
+
+    try {
+      await this.mailService.sendForgotPassword({
+        email: user.email,
+        token: token,
+      });
+
+      return {
+        message: 'Send email forgot password success',
+      };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() body: ChangePasswordDto) {
+    const user = await this.userService.getByForgotPasswordToken({
+      token: body.token,
+    });
+
+    if (!user) {
+      throw new HttpException('Token is invalid', HttpStatus.BAD_REQUEST);
+    }
+
+    const newPassword = await hash(body.password);
+
+    await this.userService.updatePassword({
+      email: user.email,
+      password: newPassword,
+    });
+
+    return {
+      message: 'Reset password success',
     };
   }
 }

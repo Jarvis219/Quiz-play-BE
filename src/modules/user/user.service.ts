@@ -53,4 +53,36 @@ export class UserService {
       data: { is_verified: true, verify_email_token: null },
     });
   }
+
+  async getByForgotPasswordToken({ token }: { token: string }) {
+    return this.prisma.user.findFirst({
+      where: { reset_password_token: token },
+    });
+  }
+
+  async updateForgotPasswordToken({
+    email,
+    token,
+  }: {
+    email: string;
+    token: string;
+  }) {
+    return this.prisma.user.update({
+      where: { email },
+      data: { reset_password_token: token },
+    });
+  }
+
+  async updatePassword({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }) {
+    return this.prisma.user.update({
+      where: { email },
+      data: { reset_password_token: null, password },
+    });
+  }
 }

@@ -103,3 +103,23 @@ export class RegisterViaGoogleDto {
   @IsString()
   family_name: string;
 }
+
+export class ForgotPasswordDto {
+  @ApiProperty({ required: true })
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+}
+
+export class ChangePasswordDto {
+  @ApiProperty({ required: true })
+  @IsNotEmpty()
+  @IsString()
+  token: string;
+
+  @ApiProperty({ required: true })
+  @IsNotEmpty()
+  @MinLength(8)
+  @IsString()
+  password: string;
+}
