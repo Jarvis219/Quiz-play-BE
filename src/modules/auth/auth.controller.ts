@@ -19,6 +19,7 @@ import {
   RegisterViaUsernameDto,
 } from 'src/common/auth.dto';
 import { IGoogleUser } from 'src/types';
+import { MailService } from '../mail/mail.service';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 
@@ -28,6 +29,7 @@ export class AuthController {
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
+    private readonly mailService: MailService,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -36,21 +38,26 @@ export class AuthController {
     const authorization = req.headers['authorization'];
     const jwtToken = authorization.split(' ')[1];
 
+    if (!jwtToken)
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+
     try {
-      if (!jwtToken) return null;
       const { userId } = verifyJwt(jwtToken, SECRET_KEY, {
         ignoreExpiration: false,
       }) as { userId: number };
 
       const user = await this.userService.getById(userId);
 
+      const accessToken = this.authService.login({ id: user.id });
+
       user.id = undefined;
       user.password = undefined;
-      user.verify_email_token = undefined;
 
-      return user;
+      return {
+        accessToken,
+        user,
+      };
     } catch (error) {
-      console.log('error: ', error);
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
   }
@@ -94,7 +101,6 @@ export class AuthController {
 
     newUser.id = undefined;
     newUser.password = undefined;
-    newUser.verify_email_token = undefined;
 
     return {
       accessToken,
@@ -118,7 +124,6 @@ export class AuthController {
     const accessToken = this.authService.login({ id: user.id });
     user.id = undefined;
     user.password = undefined;
-    user.verify_email_token = undefined;
 
     return {
       accessToken,
@@ -147,7 +152,6 @@ export class AuthController {
 
       currentUser.id = undefined;
       currentUser.password = undefined;
-      currentUser.verify_email_token = undefined;
 
       return {
         accessToken,
@@ -177,11 +181,44 @@ export class AuthController {
 
     newUser.id = undefined;
     newUser.password = undefined;
-    newUser.verify_email_token = undefined;
 
     return {
       accessToken,
       user: newUser,
+    };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('send-email-verify')
+  async sendEmailVerify(@Req() req) {
+    const user = await this.userService.getById(req.user.id);
+
+    try {
+      await this.mailService.sendVerifyEmail({
+        email: user.email,
+        token: user.verify_email_token,
+      });
+
+      return {
+        message: 'Send email verify success',
+      };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('confirm-email')
+  async confirmEmail(@Body() body: { token: string }) {
+    const user = await this.userService.getByVerifyEmailToken(body.token);
+
+    if (!user) {
+      throw new HttpException('Token is invalid', HttpStatus.BAD_REQUEST);
+    }
+
+    await this.userService.updateVerifyAcount(user.id);
+
+    return {
+      message: 'Verify email success',
     };
   }
 }

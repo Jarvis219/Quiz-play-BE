@@ -15,6 +15,11 @@ export const {
   FIREBASE_APP_ID,
   FIREBASE_MEASUREMENT_ID,
   API_GOOGLE_GET_INFOR,
+  DOMAIN_FRONTEND,
+  MAIL_HOST,
+  MAIL_USER,
+  MAIL_PASSWORD,
+  MAIL_PORT,
 } = process.env;
 
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production';

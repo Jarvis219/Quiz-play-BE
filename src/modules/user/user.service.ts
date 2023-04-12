@@ -24,6 +24,12 @@ export class UserService {
     });
   }
 
+  async getByVerifyEmailToken(token: string) {
+    return this.prisma.user.findFirst({
+      where: { verify_email_token: token },
+    });
+  }
+
   async create(data: UserDto) {
     return this.prisma.user.create({
       data,
@@ -38,6 +44,13 @@ export class UserService {
     return this.prisma.user.update({
       where: { id },
       data,
+    });
+  }
+
+  async updateVerifyAcount(id: number) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { is_verified: true, verify_email_token: null },
     });
   }
 }

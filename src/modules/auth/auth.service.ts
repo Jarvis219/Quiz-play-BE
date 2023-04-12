@@ -5,7 +5,7 @@ import { request } from 'src/services/request';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {}
 
   login({ id }: { id: number }) {
     const jwtToken = this.jwtService.sign({ userId: id });
