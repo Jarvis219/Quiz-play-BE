@@ -108,7 +108,7 @@ export class QuizController {
             continue;
           const photoItem = await this.firebaseStorageService.uploadFile({
             file: quizDetailPhotoItem,
-            path: `quizs/${user.username}/${quizDto.slug}/images`,
+            path: `quiz/${user.username}/${quizDto.slug}/images`,
             fileName: 'quiz-image',
           });
           quizDetail.photo = photoItem;
@@ -208,7 +208,7 @@ export class QuizController {
             continue;
           const photoItem = await this.firebaseStorageService.uploadFile({
             file: quizDetailPhotoItem,
-            path: `quizs/${user.username}/${quizUpdateDto.slug}/images`,
+            path: `quiz/${user.username}/${quizUpdateDto.slug}/images`,
             fileName: 'quiz-image',
           });
           quizDetail.photo = photoItem;
