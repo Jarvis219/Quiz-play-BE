@@ -23,7 +23,8 @@ enum ERole {
 model User {
   id    Int     @default(autoincrement()) @id
   email String  @unique @db.VarChar
-  full_name String? @db.VarChar
+  first_name String? @db.VarChar
+  last_name String? @db.VarChar
   phone_number String? @db.VarChar
   username  String @unique @db.VarChar
   password  String? @db.VarChar

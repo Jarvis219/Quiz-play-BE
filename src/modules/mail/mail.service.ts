@@ -26,7 +26,7 @@ export class MailService {
   }
 
   async sendForgotPassword({ email, token }: ISendVerifyEmail) {
-    const urlVerify = `${DOMAIN_FRONTEND}/auth/forgot-password?token=${token}`;
+    const urlVerify = `${DOMAIN_FRONTEND}/auth/reset-password?token=${token}`;
     const domain = DOMAIN_FRONTEND;
 
     await this.mailerService.sendMail({

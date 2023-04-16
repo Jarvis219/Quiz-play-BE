@@ -63,8 +63,21 @@ export class UserController {
       }
     }
 
-    const userUpdate = await this.userService.update(req.user.id, {
-      full_name: userData.full_name,
+    if (userData.username) {
+      if (user.username !== userData.username) {
+        const checkUsername = await this.userService.getByUsername(
+          userData.username,
+        );
+        if (checkUsername) {
+          throw new NotFoundException('Username already exists');
+        }
+      }
+    }
+
+    const userUpdate = await this.userService.update(user.id, {
+      username: userData.username,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
       avatar: userData.avatar,
       phone_number: userData.phone_number,
       address: userData.address,

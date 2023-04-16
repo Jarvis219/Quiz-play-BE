@@ -26,8 +26,15 @@ export class UserDto {
 
   @ApiProperty({ required: false })
   @IsNotEmpty()
+  @MaxLength(20)
   @IsString()
-  full_name: string;
+  first_name: string;
+
+  @ApiProperty({ required: false })
+  @IsNotEmpty()
+  @MaxLength(30)
+  @IsString()
+  last_name: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -65,9 +72,21 @@ export class ChangePasswordProfile {
 export class UpdateProfileDto {
   @ApiProperty({ required: false, default: '' })
   @IsOptional()
-  @MaxLength(50)
+  @MaxLength(30)
   @IsString()
-  full_name: string;
+  username: string;
+
+  @ApiProperty({ required: false, default: '' })
+  @IsOptional()
+  @MaxLength(20)
+  @IsString()
+  first_name: string;
+
+  @ApiProperty({ required: false, default: '' })
+  @IsOptional()
+  @MaxLength(30)
+  @IsString()
+  last_name: string;
 
   @ApiProperty({ required: false, default: '' })
   @Matches(/^(0)[0-9]{9,10}$/)

@@ -92,7 +92,8 @@ export class AuthController {
       username: body.username,
       email: body.email,
       password: newPassword,
-      full_name: body.full_name,
+      first_name: body.first_name,
+      last_name: body.last_name,
       verify_email_token: token,
       avatar: body.avatar,
       phone_number: body.phone_number,
@@ -103,6 +104,11 @@ export class AuthController {
 
     newUser.id = undefined;
     newUser.password = undefined;
+
+    await this.mailService.sendVerifyEmail({
+      email: newUser.email,
+      token: newUser.verify_email_token,
+    });
 
     return {
       accessToken,
@@ -169,7 +175,8 @@ export class AuthController {
     const dataCreateUser = {
       username: username,
       email: data.email,
-      full_name: data.name,
+      first_name: data.given_name,
+      last_name: data.family_name,
       avatar: data.picture,
       password: newPassword,
       phone_number: null,
@@ -194,6 +201,10 @@ export class AuthController {
   @Post('send-email-verify')
   async sendEmailVerify(@Req() req) {
     const user = await this.userService.getById(req.user.id);
+
+    if (user.is_verified) {
+      throw new HttpException('Email is verified', HttpStatus.BAD_REQUEST);
+    }
 
     try {
       await this.mailService.sendVerifyEmail({

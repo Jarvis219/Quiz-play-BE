@@ -42,24 +42,31 @@ export class ChangePasswordBodyDto {
 export class RegisterViaUsernameDto {
   @ApiProperty({ required: true })
   @IsNotEmpty()
-  @IsString()
-  full_name: string;
-
-  @ApiProperty({ required: true })
-  @IsNotEmpty()
   @IsEmail()
   email: string;
 
   @ApiProperty({ required: true })
   @IsNotEmpty()
   @Matches(usernameRegex)
-  @MaxLength(60)
+  @MaxLength(30)
   username: string;
 
   @ApiProperty({ required: false })
   @IsNotEmpty()
   @MinLength(8)
   password: string;
+
+  @ApiProperty({ required: true })
+  @IsOptional()
+  @MaxLength(20)
+  @IsString()
+  first_name: string;
+
+  @ApiProperty({ required: true })
+  @IsOptional()
+  @MaxLength(30)
+  @IsString()
+  last_name: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
