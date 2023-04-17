@@ -5,8 +5,13 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
   "scripts": {
     "generate-prisma": "npx prisma generate --schema=./src/modules/prisma/schema.prisma",
+    "migrate-production": "npx prisma migrate deploy --schema=./src/modules/prisma/schema.prisma",
     "migrate-dev": "npx prisma migrate dev --create-only --schema=./src/modules/prisma/schema.prisma",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
