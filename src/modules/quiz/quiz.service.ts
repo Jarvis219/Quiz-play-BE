@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Quiz as QuizModel } from '@prisma/client';
 import { QuizDto, QuizLikeUpdateDto, QuizUpdateDto } from 'src/common/quiz.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -7,11 +6,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class QuizService {
   constructor(private prisma: PrismaService) {}
 
-  async quiz(): Promise<QuizModel[]> {
+  async quiz() {
     return this.prisma.quiz.findMany();
   }
 
-  async quizBySlug(slug: string): Promise<QuizModel> {
+  async quizBySlug(slug: string) {
     return this.prisma.quiz.findFirst({
       where: {
         slug,
@@ -26,7 +25,7 @@ export class QuizService {
     });
   }
 
-  async quizByCode(code: string): Promise<QuizModel> {
+  async quizByCode(code: string) {
     return this.prisma.quiz.findFirst({
       where: {
         code,
@@ -41,11 +40,7 @@ export class QuizService {
     });
   }
 
-  async getQuizDetailAnswerBySlug({
-    slug,
-  }: {
-    slug: string;
-  }): Promise<QuizModel> {
+  async getQuizDetailAnswerBySlug({ slug }: { slug: string }) {
     return this.prisma.quiz.findFirst({
       where: {
         slug,
@@ -70,7 +65,7 @@ export class QuizService {
     code,
     countPlayers,
     photo,
-  }: QuizDto): Promise<QuizModel> {
+  }: QuizDto) {
     const quizDetailCreate = quizDetails.map((quizDetail) => ({
       question: quizDetail.question,
       type: quizDetail.type,
@@ -109,7 +104,7 @@ export class QuizService {
     });
   }
 
-  async updateQuiz(slug: string, data: QuizUpdateDto): Promise<QuizModel> {
+  async updateQuiz(slug: string, data: QuizUpdateDto) {
     const quizDetailUpdate = data.quizDetails.map((quizDetail) => {
       const quizDetailAnswersUpdate = quizDetail.answers.map((answer) => ({
         where: {
@@ -184,7 +179,7 @@ export class QuizService {
     quiz,
   }: {
     slug: string;
-    quiz: QuizModel;
+    quiz: QuizDto;
   }): Promise<boolean> {
     await this.prisma.quizDetail.deleteMany({
       where: {

@@ -15,7 +15,6 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
-import { Quiz as QuizModel } from '@prisma/client';
 import { plainToClass } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import {
@@ -39,12 +38,12 @@ export class QuizController {
   ) {}
 
   @Get('')
-  async getQuizs(): Promise<QuizModel[]> {
+  async getQuizs() {
     return this.quizService.quiz();
   }
 
   @Get('/:slug')
-  async getQuizBySlug(@Body('slug') slug: string): Promise<QuizModel> {
+  async getQuizBySlug(@Body('slug') slug: string) {
     const quiz = await this.quizService.quizBySlug(slug);
 
     if (!quiz) {
@@ -77,7 +76,7 @@ export class QuizController {
     @UploadedFiles() file: Express.Multer.File[],
     @Body() data: QuizDto,
     @Req() req: any,
-  ): Promise<QuizModel> {
+  ) {
     const quizDto = plainToClass(QuizDto, data);
     await validateOrReject(quizDto);
 
@@ -246,7 +245,7 @@ export class QuizController {
   @UseGuards(AuthGuard('jwt'))
   @Delete('/delete/:slug')
   async deleteUser(@Param('slug') slug: string) {
-    const quiz = await this.quizService.quizBySlug(slug);
+    const quiz = (await this.quizService.quizBySlug(slug)) as QuizDto;
 
     if (!quiz) {
       throw new NotFoundException(`Quiz with slug "${slug}" not found`);
