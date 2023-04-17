@@ -148,7 +148,7 @@ export class AuthController {
     let data: IGoogleUser;
 
     try {
-      data = (await this.authService.verifyTokenGoogle(body.token)).data;
+      data = await this.authService.verifyTokenGoogle({ token: body.token });
     } catch (error) {
       throw new HttpException('Token is invalid', HttpStatus.UNAUTHORIZED);
     }
