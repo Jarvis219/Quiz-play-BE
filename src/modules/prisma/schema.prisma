@@ -17,7 +17,7 @@ enum EQuestionType {
 
 enum ERole {
   ADMIN
-  USER
+  PLAYER
 }
 
 model User {
@@ -36,7 +36,7 @@ model User {
   verify_email_token String? @db.VarChar
   is_verified Boolean? @default(false)
   is_active Boolean? @default(true)
-  role ERole? @default(USER)
+  role ERole? @default(PLAYER)
   quizzes Quiz[]
   quizLikes QuizLike[]
   quizResults QuizResult[]
@@ -60,7 +60,6 @@ model Quiz {
   quizResults QuizResult[]
 
 }
-
 
 model QuizDetail {
   id        Int      @default(autoincrement()) @id
@@ -97,4 +96,10 @@ model QuizResult {
   score     Int?
   quiz      Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Avatar {
+  id        Int      @default(autoincrement()) @id
+  name      String  @unique
+  url       String
 }

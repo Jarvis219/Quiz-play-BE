@@ -8,3 +8,8 @@ export interface IGoogleUser {
   picture: string;
   locale: string;
 }
+
+export enum ERole {
+  ADMIN,
+  PLAYER,
+}

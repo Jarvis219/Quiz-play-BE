@@ -2,12 +2,13 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuthModule } from './modules/auth';
+import { AvatarModule } from './modules/avatar';
 import { MailModule } from './modules/mail/mail.module';
 import { QuizModule } from './modules/quiz';
 import { UserModule } from './modules/user';
 
 @Module({
-  imports: [UserModule, AuthModule, QuizModule, MailModule],
+  imports: [UserModule, AuthModule, QuizModule, MailModule, AvatarModule],
   controllers: [AppController],
   providers: [],
 })
