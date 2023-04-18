@@ -25,7 +25,6 @@ import {
 import { QuizDto, QuizUpdateDto } from 'src/common/quiz.dto';
 import { FirebaseStorageService } from 'src/services';
 import { generateCode, generateSlug } from 'src/utils';
-import { UserService } from '../user';
 import { QuizService } from './quiz.service';
 
 @ApiTags('quiz')
@@ -33,7 +32,6 @@ import { QuizService } from './quiz.service';
 export class QuizController {
   constructor(
     private readonly quizService: QuizService,
-    private readonly userService: UserService,
     private readonly firebaseStorageService: FirebaseStorageService,
   ) {}
 
@@ -80,13 +78,7 @@ export class QuizController {
     const quizDto = plainToClass(QuizDto, data);
     await validateOrReject(quizDto);
 
-    const userId = req.user.id;
-
-    const user = await this.userService.getById(userId);
-
-    if (!user) {
-      throw new NotFoundException(`User with id "${userId}" not found`);
-    }
+    const user = req.user;
 
     quizDto.slug = generateSlug(quizDto.title);
     quizDto.code = generateCode();
@@ -131,7 +123,7 @@ export class QuizController {
     return this.quizService.createQuiz({
       id: quizDto.id || undefined,
       slug: quizDto.slug,
-      authorId: userId,
+      authorId: user.id,
       title: quizDto.title,
       content: quizDto.content,
       published: quizDto.published,
@@ -167,27 +159,20 @@ export class QuizController {
     @Param('slug') slug: string,
     @Req() req: any,
   ) {
-    const userId = req.user.id;
+    const user = req.user;
 
     const quizUpdateDto = plainToClass(QuizUpdateDto, data);
     await validateOrReject(quizUpdateDto);
 
     if (!slug) throw new NotFoundException('Slug is required');
 
-    const [quiz, user] = await Promise.all([
-      this.quizService.quizBySlug(slug),
-      this.userService.getById(userId),
-    ]);
+    const quiz = await this.quizService.quizBySlug(slug);
 
     if (!quiz) {
       throw new NotFoundException(`Quiz with slug "${slug}" not found`);
     }
 
-    if (!user) {
-      throw new NotFoundException(`User with id "${userId}" not found`);
-    }
-
-    if (userId !== quiz.authorId) {
+    if (user.id !== quiz.authorId) {
       throw new NotFoundException(
         `You can't update this quiz because you are not the author`,
       );
@@ -231,7 +216,7 @@ export class QuizController {
     return this.quizService.updateQuiz(slug, {
       id: quizUpdateDto.id || quiz.id,
       slug,
-      authorId: userId,
+      authorId: user.id,
       title: quizUpdateDto.title || quiz.title,
       content: quizUpdateDto.content || quiz.content,
       published: quizUpdateDto.published || quiz.published,
@@ -284,23 +269,16 @@ export class QuizController {
   ) {
     id = Number(id);
 
-    const userId = req.user.id;
+    const user = req.user;
 
-    const [user, quizDetailAnswer] = await Promise.all([
-      this.userService.getById(userId),
-      this.quizService.getQuizDetailAnswerBySlug({
-        slug,
-      }),
-    ]);
+    const quizDetailAnswer = await this.quizService.getQuizDetailAnswerBySlug({
+      slug,
+    });
 
-    if (userId !== quizDetailAnswer.authorId) {
+    if (user.id !== quizDetailAnswer.authorId) {
       throw new NotFoundException(
         `You can't delete this quiz detail answer because you are not the author`,
       );
-    }
-
-    if (!user) {
-      throw new NotFoundException(`User with id "${userId}" not found`);
     }
 
     if (!quizDetailAnswer) {

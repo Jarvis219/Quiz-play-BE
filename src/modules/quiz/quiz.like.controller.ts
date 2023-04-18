@@ -9,33 +9,21 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
-import { UserService } from '../user';
 import { QuizService } from './quiz.service';
 
 @ApiTags('quiz/like')
 @Controller('quiz/like')
 export class QuizLikeController {
-  constructor(
-    private readonly quizService: QuizService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly quizService: QuizService) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/update/:slug')
   async updateQuizLike(@Param('slug') slug: string, @Req() req: any) {
-    const userId = req.user.id;
-
-    const [quiz, user] = await Promise.all([
-      this.quizService.quizBySlug(slug),
-      this.userService.getById(userId),
-    ]);
+    const user = req.user;
+    const quiz = await this.quizService.quizBySlug(slug);
 
     if (!quiz) {
       throw new NotFoundException(`Quiz with slug "${slug}" not found`);
-    }
-
-    if (!user) {
-      throw new NotFoundException(`User with id "${userId}" not found`);
     }
 
     const quizLike = await this.quizService.getQuizLikeByQuizIdAndUserId({

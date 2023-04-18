@@ -42,13 +42,7 @@ export class UserController {
     @Body() userData: UpdateProfileDto,
     @Req() req: any,
   ) {
-    const user = await this.userService.getById(req.user.id);
-
-    if (!user) {
-      throw new NotFoundException(
-        'User not found. Please login again to continue',
-      );
-    }
+    const user = req.user;
 
     if (file) {
       try {
@@ -84,6 +78,7 @@ export class UserController {
     });
 
     userUpdate.password = undefined;
+    userUpdate.id = undefined;
     return userUpdate;
   }
 }
