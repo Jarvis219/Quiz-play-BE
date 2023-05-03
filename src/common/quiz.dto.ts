@@ -136,7 +136,7 @@ export class QuizDto {
 
   @ApiProperty()
   @Transform(({ value }) => parseInt(value))
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   authorId: number;
 

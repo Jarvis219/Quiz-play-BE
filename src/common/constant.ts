@@ -27,6 +27,7 @@ export const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 export const usernameRegex = /^[a-zA-Z0-9_]+$/;
 export const DEFAULT_IMAGE_UPLOAD_LIMIT_SIZE = 5 * 1024 * 1000; // 50MB
 export const MAX_COUNT_QUIZ_DETAIL_PHOTO = 100;
+export const MAX_COUNT_DEFAULT_PHOTO = 100;
 
 export const VALID_IMAGE_MIME_TYPES = [
   'image/bmp',
@@ -52,6 +53,8 @@ export const VALID_IMAGE_MIME_TYPES = [
   'image/avif',
   'image/webp',
 ];
+
+export const PATH_DEFAULT_IMAGE = 'static/images/';
 
 // Image only
 export const multerImageFilter = (
